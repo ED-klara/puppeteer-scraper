@@ -1,10 +1,9 @@
-// File: server.js
-
 const express = require("express");
 const bodyParser = require("body-parser");
 const puppeteer = require("puppeteer-extra");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 const cors = require("cors");
+const path = require("path");
 
 puppeteer.use(StealthPlugin());
 
@@ -36,8 +35,16 @@ app.post("/scrape", async (req, res) => {
   try {
     console.log("🚀 Launching Puppeteer...");
 
+    const chromePath = path.join(
+      __dirname,
+      ".cache/puppeteer/chrome/linux-135.0.7049.84/chrome-linux64/chrome"
+    );
+
+    console.log("🔍 Using Chrome path:", chromePath);
+
     const browser = await puppeteer.launch({
       headless: "new",
+      executablePath: chromePath,
       args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
 

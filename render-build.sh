@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
-# Install Chromium used by Puppeteer
+
+export PUPPETEER_CACHE_DIR=.cache/puppeteer
+
+echo "🛠 Installing dependencies and Chromium..."
 npm install
 npx puppeteer browsers install chrome
