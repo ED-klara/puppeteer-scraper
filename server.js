@@ -49,7 +49,17 @@ app.post("/scrape", async (req, res) => {
     });
 
     const page = await browser.newPage();
-    await page.goto(url, { waitUntil: "networkidle2" });
+
+    // 🔧 Set a custom user-agent to avoid detection
+    await page.setUserAgent(
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+    );
+
+    console.log("🌐 Navigating to target URL...");
+    await page.goto(url, {
+      waitUntil: "domcontentloaded", // More lenient than networkidle2
+      timeout: 60000
+    });
 
     console.log("🕵️‍♀️ Scraping content...");
     const data = await page.evaluate(() => {
