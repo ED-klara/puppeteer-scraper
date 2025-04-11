@@ -16,14 +16,26 @@ app.use(bodyParser.json());
 
 app.post("/scrape", async (req, res) => {
   const { url } = req.body;
+  const incomingKey = req.headers["x-api-key"];
+  const expectedKey = process.env.PUPPETEER_SERVICE_API_KEY;
+
+  console.log("📡 Incoming POST /scrape request");
+  console.log("🔑 API Key Received:", incomingKey ? "[REDACTED]" : "❌ None Provided");
+  console.log("🌐 Target URL:", url || "❌ No URL Provided");
+
+  if (incomingKey !== expectedKey) {
+    console.warn("🚫 Unauthorized access attempt");
+    return res.status(403).json({ error: "Unauthorized – Invalid API Key" });
+  }
 
   if (!url) {
+    console.warn("⚠️ Missing URL in request body");
     return res.status(400).json({ error: "Missing URL in request body." });
   }
 
-  console.log(`Starting Puppeteer scrape for: ${url}`);
-
   try {
+    console.log("🚀 Launching Puppeteer...");
+
     const browser = await puppeteer.launch({
       headless: "new",
       args: ["--no-sandbox", "--disable-setuid-sandbox"]
@@ -32,7 +44,7 @@ app.post("/scrape", async (req, res) => {
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: "networkidle2" });
 
-    // Example scrape: Get all text content from <body>
+    console.log("🕵️‍♀️ Scraping content...");
     const data = await page.evaluate(() => {
       return {
         title: document.title,
@@ -41,17 +53,19 @@ app.post("/scrape", async (req, res) => {
     });
 
     await browser.close();
+
+    console.log("✅ Scraping successful! Sending response...");
     res.status(200).json({ url, ...data });
   } catch (error) {
-    console.error("Scraping error:", error);
+    console.error("❌ Scraping error:", error.message || error);
     res.status(500).json({ error: "Failed to scrape site." });
   }
 });
 
 app.get("/", (req, res) => {
-  res.send("Puppeteer scraping server is running.");
+  res.send("📦 Puppeteer scraping server is running.");
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🟢 Server running on port ${PORT}`);
 });
